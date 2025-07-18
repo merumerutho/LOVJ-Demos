@@ -55,7 +55,7 @@ local function get_gameboy()
 	local g = patch.resources.graphics
 	patch.graphics = {}
 	patch.graphics.gameboy = {}
-	patch.graphics.gameboy.gb = love.graphics.newImage("data/graphics/gb.png")
+	patch.graphics.gameboy.gb = love.graphics.newImage("demos/demo20/assets/gb.png")
 	patch.graphics.gameboy.size = {x = patch.graphics.gameboy.gb:getPixelWidth(), y = patch.graphics.gameboy.gb:getPixelHeight()}
 	patch.graphics.gameboy.frames = {}
 end

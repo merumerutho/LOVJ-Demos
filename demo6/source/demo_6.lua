@@ -36,7 +36,7 @@ end
 local function init_params()
 	local g = patch.resources.graphics
 	local p = patch.resources.parameters
-	g:setName(1, "bg")				g:set("bg", "data/demo_6/bg.png")
+	g:setName(1, "bg")				g:set("bg", "demos/demo6/assets/bg.png")
 	get_bg()
 	p:setName(1, "bgSpeed")			p:set("bgSpeed", 10)
 

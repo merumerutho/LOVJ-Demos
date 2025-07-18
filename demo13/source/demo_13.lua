@@ -28,8 +28,8 @@ end
 local function init_params()
 	local g = patch.resources.graphics
 	local p = patch.resources.parameters
-	g:setName(1, "wired")				g:set("wired", "data/graphics/wired.png")
-	g:setName(2, "soul")				g:set("soul", "data/graphics/soul.png")
+	g:setName(1, "wired")				g:set("wired", "demos/demo13/assets/wired.png")
+	g:setName(2, "soul")				g:set("soul", "demos/demo13/assets/soul.png")
 	get_bg()
 	p:setName(1, "bgSpeed")				p:set("bgSpeed", 10)
 	p:setName(2, "bgLayer1")			p:set("bgLayer1", 1)

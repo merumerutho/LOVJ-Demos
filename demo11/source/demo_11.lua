@@ -27,7 +27,7 @@ local function init_params()
 	local g = patch.resources.graphics
 	local p = patch.resources.parameters
 
-    g:setName(1, "video")           g:set("video", "data/demo_11/evil_eyes.ogg")
+    g:setName(1, "video")           g:set("video", "demos/demo11/assets/evil_eyes.ogg")
 end
 
 --- @public patchControls evaluate user keyboard controls

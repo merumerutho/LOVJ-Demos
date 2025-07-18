@@ -43,10 +43,10 @@ local function init_params()
 
 	patch.graphics = {}
 
-	g:setName(1, "roach")				g:set("roach", "data/graphics/cockroach.png")
+	g:setName(1, "roach")				g:set("roach", "demos/demo18/assets/cockroach.png")
 	get_roach()
 
-	g:setName(2, "love")				g:set("love", "data/graphics/love.png")
+	--g:setName(2, "love")				g:set("love", "data/graphics/love.png")
 
 	p:setName(1, "windowSize") 			p:set("windowSize", 0.6)
 	p:setName(2, "showRoach")			p:set("showRoach", true)

@@ -105,10 +105,10 @@ local function init_params()
 
 	patch.graphics = {}
 
-	g:setName(1, "lain")		g:set("lain", "data/demo_12/lain.png")
+	g:setName(1, "lain")		g:set("lain", "demos/demo12/assets/lain.png")
 	get_lain()
 
-	g:setName(2, "love")		g:set("love", "data/graphics/love.png")
+	g:setName(2, "love")		g:set("love", "demos/demo12/assets/love.png")
 	get_bg()
 
 	p:setName(1, "windowSize") 			p:set("windowSize", 0.6)
