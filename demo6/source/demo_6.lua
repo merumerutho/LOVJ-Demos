@@ -80,7 +80,7 @@ function patch.init(slot)
 	patch.env = Envelope:new(0.005, 0, 1, 0.5)
 	patch.lfo = Lfo:new(patch.bpm/60, 0)
 
-	patch.sym_shader = love.graphics.newShader(table.getValueByName("quadmirror", cfgShaders.PostProcessShaders))
+	patch.sym_shader = love.graphics.newShader(table.getValueByName("09_quadmirror", cfgShaders.PostProcessShaders))
 end
 
 --- @private draw_bg draw background graphics

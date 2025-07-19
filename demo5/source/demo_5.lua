@@ -36,8 +36,6 @@ function patch.patchControls()
 	--if kp.keypressOnAttack("x") then
 	--	patch.hang = not patch.hang
 	--end
-	-- fallback to general controls callback
-	controls.handleKeyBoard()
 end
 
 
