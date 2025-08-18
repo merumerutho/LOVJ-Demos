@@ -7,6 +7,8 @@ local cfg_screen = lovjRequire("cfg/cfg_screen")
 local Envelope = lovjRequire("lib/signals/envelope")
 local Lfo = lovjRequire("lib/signals/lfo")
 
+local cfg_bpm = lovjRequire("cfg/cfg_bpm")
+
 local PALETTE
 
 -- aquamarine
@@ -66,7 +68,7 @@ function patch.init(slot)
 
 	init_params()
 
-	patch.bpm = 120
+	patch.bpm = cfg_bpm.default_bpm
 	patch.timers = {}
 	patch.timers.bpm = Timer:new(60 / patch.bpm )  -- 60 are seconds in 1 minute, 4 are sub-beats
 
@@ -134,7 +136,7 @@ function patch.update()
 	patch:mainUpdate()
 	patch.timers.bpm:update()
 
-	--patch.env:UpdateTrigger(patch.timers.bpm:Activated())
+	patch.env:UpdateTrigger(patch.timers.bpm:activated())
 	--patch.lfo:UpdateTrigger(true)
 
 end

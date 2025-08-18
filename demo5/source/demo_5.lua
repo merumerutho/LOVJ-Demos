@@ -179,7 +179,7 @@ function patch.update()
 	patch:mainUpdate()
 
 	-- update points positions
-	if cfg_timers.fpsTimer:Activated() then
+	if cfg_timers.fpsTimer:activated() then
 		patch.updatePoints(patch.points)
 	end
 end

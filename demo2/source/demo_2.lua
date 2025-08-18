@@ -1,10 +1,12 @@
 local Patch = lovjRequire ("lib/patch")
-local palettes = lovjRequire ("lib/utils/palettes")
+local Palettes = lovjRequire ("lib/utils/palettes")
 local screen = lovjRequire ("lib/screen")
 local Timer = lovjRequire ("lib/timer")
-local cfg_timers = lovjRequire ("cfg/cfg_timers")
 
-local PALETTE = palettes.PICO8
+local cfg_timers = lovjRequire ("cfg/cfg_timers")
+local cfg_bpm = lovjRequire ("cfg/cfg_bpm")
+
+local PALETTE = Palettes.PICO8
 
 local patch = Patch:new()
 
@@ -25,7 +27,7 @@ local function addBall(sx, sy)
   -- ball z-depth (radius)
 	ball.z = math.random()
   -- ball color
-	ball.c = palettes.getColor(PALETTE, math.random(16))
+	ball.c = Palettes.getColor(PALETTE, math.random(16))
   -- ball direction is binary
 	ball.dx = (-1) ^ (1+math.random(2))
 	ball.dy = (-1) ^ (1+math.random(2))
@@ -84,7 +86,7 @@ end
 
 
 local function drawBall(b)
-  	local border_col = palettes.getColor(PALETTE, math.random(16))
+  	local border_col = Palettes.getColor(PALETTE, math.random(16))
   	love.graphics.setColor(border_col[1] / 255, border_col[2] / 255, border_col[3] / 255, 1)
   	love.graphics.circle("line", b.x, b.y, (b.z / 2) ^ 1.6, (b.z * 2) + 6)
   	-- filled circle

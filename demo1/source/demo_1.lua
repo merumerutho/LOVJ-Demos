@@ -1,9 +1,15 @@
+-- demo_1.lua
+
 local Patch = lovjRequire("lib/patch")
+local Timer = lovjRequire("lib/timer")
+local Envelope = lovjRequire("lib/signals/envelope")
 local palettes = lovjRequire("lib/utils/palettes")
 local kp = lovjRequire("lib/utils/keypress")
-local Timer = lovjRequire("lib/timer")
+---
 local cfg_timers = lovjRequire("cfg/cfg_timers")
-local Envelope = lovjRequire("lib/signals/envelope")
+local cfg_bpm = lovjRequire("cfg/cfg_bpm")
+
+---
 
 -- import pico8 palette
 local PALETTE = palettes.PICO8
@@ -62,7 +68,7 @@ function patch.init(slot)
 
 	patch:setCanvases()
 
-	patch.bpm = 170
+	patch.bpm = cfg_bpm.default_bpm
 
 	patch.timers = {}
 	patch.timers.bpm = Timer:new(60 / patch.bpm )  -- 60 are seconds in 1 minute, 4 are sub-beats
@@ -112,7 +118,7 @@ function patch.update()
 	patch:mainUpdate()
 	patch.timers.bpm:update()
 
-	patch.env:UpdateTrigger(patch.timers.bpm:Activated())
+	patch.env:UpdateTrigger(patch.timers.bpm:activated())
 end
 
 

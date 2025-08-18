@@ -12,7 +12,7 @@ local PALETTE
 
 local patch = Patch:new()
 
-local sea_reflection = love.graphics.newShader(table.getValueByName("19_sea_reflection", cfgShaders.PostProcessShaders))
+local sea_reflection = love.graphics.newShader(table.getValueByName("19_sea_reflection", cfg_shaders.PostProcessShaders))
 
 local t
 

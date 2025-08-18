@@ -183,7 +183,7 @@ function patch.update()
 	patch:mainUpdate()
 	patch.timers.bpm:update()
 
-	patch.env:UpdateTrigger(patch.timers.bpm:Activated())
+	patch.env:UpdateTrigger(patch.timers.bpm:activated())
 	patch.lfo:UpdateTrigger(true)
 
 end

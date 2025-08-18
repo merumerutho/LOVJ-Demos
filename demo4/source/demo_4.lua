@@ -3,8 +3,10 @@ local palettes = lovjRequire("lib/utils/palettes")
 local screen = lovjRequire("lib/screen")
 local kp = lovjRequire("lib/utils/keypress")
 local Timer = lovjRequire("lib/timer")
-local cfg_timers = lovjRequire("cfg/cfg_timers")
 local Envelope = lovjRequire("lib/signals/envelope")
+
+local cfg_timers = lovjRequire("cfg/cfg_timers")
+local cfg_bpm = lovjRequire ("cfg/cfg_bpm")
 
 -- declaring function
 local function bpmSet(s)  end
@@ -128,10 +130,10 @@ function patch.update()
 	patch.timers.bpm:update()
 
 	-- Upon bpm timer trigger, update envelope trigger
-	patch.env:UpdateTrigger(patch.timers.bpm:Activated())
+	patch.env:UpdateTrigger(patch.timers.bpm:activated())
 
 	-- Upon bpm timer trigger, also update rectangles
-	if patch.timers.bpm:Activated() then
+	if patch.timers.bpm:activated() then
 		recalculateRects()
 	else
 		updateRects()
