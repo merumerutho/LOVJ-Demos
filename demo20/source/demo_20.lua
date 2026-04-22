@@ -23,7 +23,7 @@ local function init_params()
 end
 
 --- @public patchControls evaluate user keyboard controls
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	if love.keyboard.isDown("r") then patch.init(patch.slot) cfg_timers.globalTimer:reset() end
 end
@@ -31,7 +31,7 @@ end
 
 --- @public setCanvases (re)set canvases for this patch
 function patch:setCanvases()
-	Patch.setCanvases(patch)
+	Patch.setCanvases(self)
 
 	if cfg_screen.UPSCALE_MODE == cfg_screen.LOW_RES then
         patch.canvases.c1 = love.graphics.newCanvas(2*screen.InternalRes.W, 2*screen.InternalRes.H)
@@ -59,12 +59,12 @@ end
 
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 
 	PALETTE = palettes.PICO8
 
-	patch:setCanvases()
+	self:setCanvases()
 	patch.fbk = Feedback:new({ tint = {1, 1, 1, 1}, clearColor = {0, 0, 0, 1} })
 
 	get_gameboy()
@@ -74,12 +74,12 @@ end
 
 
 --- @public patch.draw draw routine
-function patch.draw()
+function patch:draw()
 	local t = cfg_timers.globalTimer.T
 
 	local cx, cy = screen.InternalRes.W , screen.InternalRes.H
 
-	patch:drawSetup()
+	self:drawSetup()
 
 	-- ## main graphics pipeline ##
     love.graphics.setColor(1,1,1,1)
@@ -135,16 +135,16 @@ function patch.draw()
 	love.graphics.setColor(1,1,1,1)
     love.graphics.draw(patch.canvases.c1, -cx/2, -cy/2)
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

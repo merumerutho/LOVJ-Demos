@@ -230,19 +230,19 @@ local function init_params()
 	p:define(16, "contrast",       1.0,   { min = 0.3,  max = 2.5,  type = "float" })
 end
 
-function patch.patchControls() end
+function patch:patchControls() end
 
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
-	patch:setCanvases()
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
+	self:setCanvases()
 	init_params()
 	patch.shader = love.graphics.newShader(shader_code)
 	patch.srcCanvas = love.graphics.newCanvas(screen.InternalRes.W, screen.InternalRes.H)
 end
 
-function patch.draw()
+function patch:draw()
 	local p = patch.resources.parameters
-	patch:drawSetup()
+	self:drawSetup()
 
 	patch.shader:send("_beat", clock.beat)
 	patch.shader:send("_subBeat", clock.subBeat)
@@ -267,13 +267,13 @@ function patch.draw()
 	love.graphics.draw(patch.srcCanvas)
 	love.graphics.setShader()
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 end
 
-function patch.commands(s) end
+function patch:commands(s) end
 
 return patch

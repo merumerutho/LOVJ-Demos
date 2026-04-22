@@ -11,7 +11,7 @@ local PALETTE = Palettes.PICO8
 local patch = Patch:new()
 
 --- @private patchControls handle controls for current patch
-function patch.patchControls()
+function patch:patchControls()
 	-- Hanger
 	if love.keyboard.isDown("x") then patch.hang = true else patch.hang = false end
 	-- Reset
@@ -75,10 +75,10 @@ local function init_params()
 end
 
 
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	patch.hang = false
-	patch:setCanvases()
+	self:setCanvases()
 	
 	patch.resources.parameters = init_params()
 	
@@ -104,13 +104,13 @@ local function drawBall(b)
 end
 
 
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
   	-- draw balls
   	for k,b in pairs(patch.ballList) do
     	drawBall(b)
   	end
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
@@ -125,8 +125,8 @@ local function orderZ(l)
 end
 
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 
 	-- update balls
 	for k, b in pairs(patch.ballList) do
@@ -138,7 +138,7 @@ function patch.update()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

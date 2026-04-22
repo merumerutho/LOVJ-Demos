@@ -86,7 +86,7 @@ local function init_params()
 end
 
 --- @public patchControls evaluate user keyboard controls
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	if kp.isDown("up") then p:set("colorInversion", math.min(p:get("colorInversion") + .1, 1)) end
 	if kp.isDown("down") then p:set("colorInversion", math.max(p:get("colorInversion") - .1, 0)) end
@@ -97,10 +97,10 @@ end
 
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
-	patch:setCanvases()
+	self:setCanvases()
 	init_params()
 	patch.compiledShader = love.graphics.newShader(shader_code)
 	patch.srcCanvas = love.graphics.newCanvas(screen.InternalRes.W, screen.InternalRes.H)
@@ -126,23 +126,23 @@ local function draw_stuff()
 end
 
 --- @public patch.draw draw routine
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 
 	-- draw picture
 	draw_stuff()
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
+function patch:update()
 
-	patch:mainUpdate()
+	self:mainUpdate()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

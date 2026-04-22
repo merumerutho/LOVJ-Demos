@@ -33,7 +33,7 @@ local function init_params()
 end
 
 --- @private patchControls handle controls for current patch
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	local gr = patch.resources.graphics
 	local gl = patch.resources.globals
@@ -57,16 +57,15 @@ function patch.patchControls()
 	-- Hanger
 	if kp.isDown("x") then patch.hang = true else patch.hang = false end
 
-	return p, gr, gl
 end
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 
 	patch.resources.parameters = init_params()
 
-	patch:setCanvases()
+	self:setCanvases()
 
 	patch.timers = {}
 	patch.timers.bpm = Timer:new(clock.beatDuration())
@@ -75,8 +74,8 @@ function patch.init(slot, globals, shaderext)
 end
 
 --- @public patch.draw draw routine
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 
 	local p = patch.resources.parameters
 	local t = cfg_timers.globalTimer.T
@@ -106,12 +105,12 @@ function patch.draw()
 	end
 
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 	patch.timers.bpm:set_reset_t(clock.beatDuration())
 	patch.timers.bpm:update()
 
@@ -119,7 +118,7 @@ function patch.update()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

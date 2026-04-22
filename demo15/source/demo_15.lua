@@ -26,14 +26,14 @@ local function init_params()
 end
 
 --- @public patchControls evaluate user keyboard controls
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	-- Hanger
 	if kp.isDown("x") then patch.hang = true else patch.hang = false end
 end
 
 function patch:setCanvases()
-	Patch.setCanvases(patch)  -- call parent function
+	Patch.setCanvases(self)  -- call parent function
 	-- patch-specific execution (window canvas)
 	if cfg_screen.UPSCALE_MODE == cfg_screen.LOW_RES then
 		patch.canvases.balls = love.graphics.newCanvas(screen.InternalRes.W, screen.InternalRes.H)
@@ -46,10 +46,10 @@ end
 
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
-	patch:setCanvases()
+	self:setCanvases()
 
 	init_params()
 
@@ -152,8 +152,8 @@ local function draw_scene()
 end
 
 --- @public patch.draw draw routine
-function patch.draw()
-	patch:drawSetup(patch.hang)
+function patch:draw()
+	self:drawSetup(patch.hang)
 
 	-- clear main canvas
 	patch.canvases.main:renderTo(function()
@@ -163,11 +163,11 @@ function patch.draw()
 	-- draw picture
 	draw_scene()
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
+function patch:update()
 	local p = patch.resources.parameters
 	local t = cfg_timers.globalTimer.T
 
@@ -192,11 +192,11 @@ function patch.update()
 	patch.push:UpdateFreq(clock.syncRate("4bar"))
 	patch.push:UpdateTrigger(true)
 
-	patch:mainUpdate()
+	self:mainUpdate()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 
 

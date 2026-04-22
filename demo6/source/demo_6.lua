@@ -45,11 +45,10 @@ local function init_params()
 	p:define(5, "scrollX",    20,   { min = 0,   max = 60,  type = "float" })
 	p:define(6, "scrollY",    10,   { min = 0,   max = 60,  type = "float" })
 
-	return p, g
 end
 
 --- @public patchControls evaluate user keyboard controls
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	-- Hanger
 	if kp.isDown("x") then patch.hang = true else patch.hang = false end
@@ -58,7 +57,7 @@ end
 
 --- @public setCanvases (re)set canvases for this patch
 function patch:setCanvases()
-	Patch.setCanvases(patch)  -- call parent function
+	Patch.setCanvases(self)  -- call parent function
 	-- patch-specific execution (window canvas)
 	if not screen.isUpscalingHiRes() then
 		resW, resH = screen.InternalRes.W, screen.InternalRes.H
@@ -70,10 +69,10 @@ end
 
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 
-	patch:setCanvases()
+	self:setCanvases()
 
 	patch.resources.parameters,
 	patch.resources.graphics = init_params()
@@ -160,8 +159,8 @@ local function draw_bg()
 end
 
 --- @public patch.draw draw routine
-function patch.draw()
-	patch:drawSetup(hang)
+function patch:draw()
+	self:drawSetup(hang)
 
 	-- clear main canvas
 	patch.canvases.main:renderTo(function()
@@ -178,13 +177,13 @@ function patch.draw()
 	love.graphics.setColor(1,1,1,1)
 	love.graphics.draw(patch.canvases.toShade, 0, 0, 0, scaleX, scaleY)
 
-	return patch:drawExec()
+	return self:drawExec()
 
 end
 
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 	patch.timers.bpm:set_reset_t(clock.beatDuration())
 	patch.timers.bpm:update()
 	patch.lfo:UpdateFreq(clock.syncRate("1beat"))
@@ -194,7 +193,7 @@ function patch.update()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

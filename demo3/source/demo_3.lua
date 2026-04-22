@@ -14,7 +14,7 @@ local DEFAULT_ACCELERATION = 0.4
 local patch = Patch:new()
 
 --- @public patchControls handle controls for current patch
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	local gr = patch.resources.graphics
 	local gl = patch.resources.globals
@@ -30,7 +30,6 @@ function patch.patchControls()
 	-- hang
 	if kp.isDown("x") then patch.hang = true else patch.hang = false end
 
-	return p, gr, gl
 end
 
 --- @private newBall spawn new ball in ballList
@@ -74,10 +73,10 @@ local function init_params()
 end
 
 --- @public init initialization function for the patch
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
-	patch:setCanvases()
+	self:setCanvases()
 
 	patch.resources.parameters = init_params()
 
@@ -112,18 +111,18 @@ local function drawBall(b)
 end
 
 
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 	-- draw balls
 	for k, b in pairs(patch.ballList) do
 		drawBall(b)
 	end
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 --- @public update update patch function
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 
 	-- update balls
 	for k, b in pairs(patch.ballList) do
@@ -133,7 +132,7 @@ function patch.update()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

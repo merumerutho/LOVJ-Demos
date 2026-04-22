@@ -9,7 +9,7 @@ local cfg_timers = lovjRequire("cfg/cfg_timers")
 
 local patch = Patch:new()
 
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	if kp.isDown("lctrl") then
 		-- Inverter
@@ -34,11 +34,11 @@ local function init_params()
 end
 
 
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	patch.invert = false
-	patch:setShaders()
-	patch:setCanvases()
+	self:setShaders()
+	self:setCanvases()
 
 	patch.n = 10
 	patch.localTimer = 0
@@ -49,7 +49,7 @@ function patch.init(slot, globals, shaderext)
 	patch.drawList = {}
 
 	patch.resources.parameters = init_params()
-	patch:assignDefaultDraw()
+	self:assignDefaultDraw()
 end
 
 
@@ -96,8 +96,8 @@ end
 
 
 --- @public patch.draw draw the patch
-function patch.draw()
-	patch:drawSetup()  -- call parent setup function
+function patch:draw()
+	self:drawSetup()  -- call parent setup function
 
 	local t = cfg_timers.globalTimer.T
 
@@ -121,12 +121,12 @@ function patch.draw()
 		end
 	end
 
-	return patch:drawExec()  -- call parent rendering function
+	return self:drawExec()  -- call parent rendering function
 end
 
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 
 	-- Update bpm timer
 	patch.timers.bpm:set_reset_t(clock.beatDuration())
@@ -143,7 +143,7 @@ function patch.update()
 	end
 end
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

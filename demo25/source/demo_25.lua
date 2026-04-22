@@ -55,21 +55,21 @@ local function init_params()
 	p:define(8, "distortion",   0.3,  { min = 0,   max = 2,  type = "float" })
 end
 
-function patch.patchControls() end
+function patch:patchControls() end
 
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
-	patch:setCanvases()
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
+	self:setCanvases()
 	init_params()
 	patch.shader = love.graphics.newShader(plasma_code)
 	patch.srcCanvas = love.graphics.newCanvas(screen.InternalRes.W, screen.InternalRes.H)
 end
 
-function patch.draw()
+function patch:draw()
 	local p = patch.resources.parameters
 	local t = cfg_timers.globalTimer.T
 
-	patch:drawSetup()
+	self:drawSetup()
 
 	patch.shader:send("_time", t)
 	patch.shader:send("_freq1", p:get("freq1"))
@@ -85,13 +85,13 @@ function patch.draw()
 	love.graphics.draw(patch.srcCanvas)
 	love.graphics.setShader()
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 end
 
-function patch.commands(s) end
+function patch:commands(s) end
 
 return patch

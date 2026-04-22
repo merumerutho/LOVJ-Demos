@@ -13,7 +13,7 @@ local patch = Patch:new()
 
 --- @public setCanvases (re)set canvases for this patch
 function patch:setCanvases()
-	Patch.setCanvases(patch)  -- call parent function
+	Patch.setCanvases(self)  -- call parent function
 	-- patch-specific execution (video canvas)
 	if screen_settings.UPSCALE_MODE == screen_settings.LOW_RES then
 		patch.canvases.video = love.graphics.newCanvas(screen.InternalRes.W, screen.InternalRes.H)
@@ -34,7 +34,7 @@ local function init_params()
 end
 
 --- @public patchControls evaluate user keyboard controls
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 
     -- insert here your patch controls
@@ -42,13 +42,13 @@ end
 
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	local g = patch.resources.graphics
 
 	PALETTE = palettes.PICO8
 
-	patch:setCanvases()
+	self:setCanvases()
 
 	init_params()
 
@@ -72,8 +72,8 @@ local function draw_stuff()
 end
 
 --- @public patch.draw draw routine
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 
 	local t = cfg_timers.globalTimer.T
 
@@ -92,12 +92,12 @@ function patch.draw()
 	else
 		love.graphics.draw(patch.canvases.video)
 	end
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
-    patch:mainUpdate()
+function patch:update()
+    self:mainUpdate()
     local p = patch.resources.parameters
     patch.video.playbackSpeed = p:get("playbackSpeed")
     patch.video.loopEnd = p:get("loopEnd")
@@ -105,7 +105,7 @@ function patch.update()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

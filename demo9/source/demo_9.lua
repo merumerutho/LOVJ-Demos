@@ -17,11 +17,10 @@ local function init_params()
 	local g = patch.resources.graphics
 	local p = patch.resources.parameters
 
-	return p, g
 end
 
 --- @public patchControls evaluate user keyboard controls
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 
 	if kp.isDown("r") then
@@ -33,11 +32,11 @@ end
 
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 
-	patch:setCanvases()
+	self:setCanvases()
 
 	patch.resources.parameters,
 	patch.resources.graphics = init_params()
@@ -77,19 +76,19 @@ local function draw_stuff()
 end
 
 --- @public patch.draw draw routine
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 
 	-- draw picture
 	draw_stuff()
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
+function patch:update()
 
-	patch:mainUpdate()
+	self:mainUpdate()
 
 	local t = cfg_timers.globalTimer.T
 
@@ -103,7 +102,7 @@ function patch.update()
 	return
 end
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

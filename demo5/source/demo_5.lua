@@ -13,7 +13,7 @@ local function inScreen(x, y)
 	return (x > 0 and x < screen.InternalRes.W and y > 0 and y < screen.InternalRes.H)
 end
 
-function patch.patchControls()
+function patch:patchControls()
 end
 
 
@@ -62,8 +62,8 @@ local function init_params()
 	return p
 end
 
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	patch.palette = PALETTE
 	patch.nPoints = 3 + math.random(32)
 	patch.points = {}
@@ -71,7 +71,7 @@ function patch.init(slot, globals, shaderext)
 		table.insert(patch.points, patch.generatePoint(i))
 	end
 
-	patch:setCanvases()
+	self:setCanvases()
 	patch.resources.parameters = init_params()
 
 	patch.pixShader = love.graphics.newShader(
@@ -99,10 +99,10 @@ function patch.reset()
 	end
 end
 
-function patch.draw()
+function patch:draw()
 	local p = patch.resources.parameters
 
-	patch:drawSetup()
+	self:drawSetup()
 
 	-- draw points and lines into main canvas
 	for k, pix in pairs(patch.points) do
@@ -141,11 +141,11 @@ function patch.draw()
 	love.graphics.draw(patch.fb:getOutput(), ox, oy)
 	love.graphics.setBlendMode("alpha")
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 
 	if cfg_timers.fpsTimer:activated() then
 		patch.updatePoints(patch.points)
@@ -153,7 +153,7 @@ function patch.update()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

@@ -15,7 +15,7 @@ local LAIN_WIDTH = 140
 local LAIN_HEIGHT = 175
 
 --- @private patchControls handle controls for current patch
-function patch.patchControls()
+function patch:patchControls()
 	-- Hanger
 	if love.keyboard.isDown("x") then patch.hang = true else patch.hang = false end
 	-- Reset
@@ -123,7 +123,7 @@ end
 
 --- @public setCanvases (re)set canvases for this patch
 function patch:setCanvases()
-	Patch.setCanvases(patch)  -- call parent function
+	Patch.setCanvases(self)  -- call parent function
 	-- patch-specific execution (window canvas)
 	if cfg_screen.UPSCALE_MODE == cfg_screen.LOW_RES then
 		patch.canvases.window = love.graphics.newCanvas(screen.InternalRes.W, screen.InternalRes.H)
@@ -137,10 +137,10 @@ function patch:setCanvases()
 end
 
 
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	patch.hang = false
-	patch:setCanvases()
+	self:setCanvases()
 	patch.shader_window = love.graphics.newShader(table.getValueByName("circlewindow", cfg_shaders.OtherShaders))
 	
   	-- balls
@@ -178,8 +178,8 @@ local function drawBall(b)
 end
 
 
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 
 	local p = patch.resources.parameters
 	local t = cfg_timers.globalTimer.T
@@ -279,7 +279,7 @@ function patch.draw()
 
 	love.graphics.setColor(1,1,1,1)
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
@@ -294,8 +294,8 @@ local function orderZ(l)
 end
 
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 
 	local p = patch.resources.parameters
 
@@ -329,7 +329,7 @@ function patch.update()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

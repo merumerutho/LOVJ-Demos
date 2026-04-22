@@ -61,14 +61,14 @@ local function init_params()
 	p:define(22, "fbkTintB",     1.0,  { min = 0,   max = 1,   type = "float" })
 end
 
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	if kp.isDown("x") then patch.hang = true else patch.hang = false end
 end
 
 
 function patch:setCanvases()
-	Patch.setCanvases(patch)
+	Patch.setCanvases(self)
 	local w, h
 	if cfg_screen.UPSCALE_MODE == cfg_screen.LOW_RES then
 		w, h = screen.InternalRes.W, screen.InternalRes.H
@@ -79,11 +79,11 @@ function patch:setCanvases()
 end
 
 
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 
-	patch:setCanvases()
+	self:setCanvases()
 
 	init_params()
 
@@ -139,11 +139,11 @@ local function drawBalls(t, p)
 end
 
 
-function patch.draw()
+function patch:draw()
 	local t = cfg_timers.globalTimer.T
 	local p = patch.resources.parameters
 
-	patch:drawSetup()
+	self:drawSetup()
 
 	love.graphics.setCanvas(patch.bgCanvas)
 	love.graphics.setColor(1, 1, 1, 1)
@@ -187,12 +187,12 @@ function patch.draw()
 
 	love.graphics.setColor(1, 1, 1, 1)
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 	patch.timers.bpm:set_reset_t(clock.beatDuration())
 	patch.timers.bpm:update()
 
@@ -200,7 +200,7 @@ function patch.update()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

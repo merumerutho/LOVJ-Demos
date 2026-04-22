@@ -185,7 +185,7 @@ local function init_params()
 end
 
 
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	if kp.isDown("up")    then p:set("zoom", math.min(p:get("zoom") + 0.01, 1)) end
 	if kp.isDown("down")  then p:set("zoom", math.max(p:get("zoom") - 0.01, 0)) end
@@ -194,10 +194,10 @@ function patch.patchControls()
 end
 
 
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
-	patch:setCanvases()
+	self:setCanvases()
 	init_params()
 	patch.lfo = Lfo:new(clock.syncRate("1/2bar"), 0)
 	patch.compiledShader = love.graphics.newShader(shader_code)
@@ -225,16 +225,16 @@ local function draw_stuff()
 end
 
 
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 	draw_stuff()
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
+function patch:update()
 	local t = cfg_timers.globalTimer.T
-	patch:mainUpdate()
+	self:mainUpdate()
 	patch.lfo:UpdateFreq(clock.syncRate("1/2bar"))
 	patch.lfo:UpdateTrigger(t)
 end

@@ -27,7 +27,7 @@ local function init_params()
 end
 
 --- @public patchControls evaluate user keyboard controls
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 	if kp.isDown("left") then p:set("moonSize", math.max(p:get("moonSize") - .01, 0)) end
 	if kp.isDown("right") then p:set("moonSize", math.min(p:get("moonSize") + .01, 2.)) end
@@ -35,10 +35,10 @@ end
 
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
-	patch:setCanvases()
+	self:setCanvases()
 
 	init_params()
 
@@ -75,29 +75,29 @@ local function draw_stuff()
 end
 
 --- @public patch.draw draw routine
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 
 	-- draw picture
 	draw_stuff()
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
+function patch:update()
   -- reflection time
   if cfg_shaders.enabled then
     sea_reflection:send("_time", cfg_timers.globalTimer.T) 
   end
 
-	patch:mainUpdate()
+	self:mainUpdate()
 	patch.lfo:UpdateFreq(clock.syncRate("1/2bar"))
 	patch.lfo:UpdateTrigger(t)
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 

@@ -19,11 +19,10 @@ local function init_params()
 	p:define(2, "horizon",    0.225,  { min = 0.05,max = 0.45, type = "float" })
 	p:define(3, "sway",       50,     { min = 0,   max = 150,  type = "float" })
 
-	return p, g
 end
 
 --- @public patchControls evaluate user keyboard controls
-function patch.patchControls()
+function patch:patchControls()
 	local p = patch.resources.parameters
 
     -- insert here your patch controls
@@ -31,9 +30,9 @@ end
 
 
 --- @public init init routine
-function patch.init(slot, globals, shaderext)
-	Patch.init(patch, slot, globals, shaderext)
-	patch:setCanvases()
+function patch:init(slot, globals, shaderext)
+	Patch.init(self, slot, globals, shaderext)
+	self:setCanvases()
 
 	patch.resources.parameters,
 	patch.resources.graphics = init_params()
@@ -78,8 +77,8 @@ local function draw_stuff()
 end
 
 --- @public patch.draw draw routine
-function patch.draw()
-	patch:drawSetup()
+function patch:draw()
+	self:drawSetup()
 	-- clear main canvas
 	patch.canvases.main:renderTo(function()
 									love.graphics.clear(1,1,1,1)
@@ -87,16 +86,16 @@ function patch.draw()
 	-- draw picture
 	draw_stuff()
 
-	return patch:drawExec()
+	return self:drawExec()
 end
 
 
-function patch.update()
-	patch:mainUpdate()
+function patch:update()
+	self:mainUpdate()
 end
 
 
-function patch.commands(s)
+function patch:commands(s)
 
 end
 
