@@ -31,12 +31,16 @@ local function init_params()
 	g:setName(1, "wired")				g:set("wired", "demos/demo13/assets/wired.png")
 	g:setName(2, "soul")				g:set("soul", "demos/demo13/assets/soul.png")
 	get_bg()
-	p:setName(1, "bgSpeed")				p:set("bgSpeed", 10)
-	p:setName(2, "bgLayer1")			p:set("bgLayer1", 1)
-	p:setName(3, "bgLayer2")			p:set("bgLayer2", 1)
-	p:setName(4, "bgLayer3")			p:set("bgLayer3", 1)
-	p:setName(5, "dw")					p:set("dw", 0.83)
-	p:setName(6, "dh")					p:set("dh", 0.66)
+	p:define(1, "bgSpeed",   10,    { min = 1,    max = 50,  type = "float" })
+	p:define(2, "bgLayer1",  1,    { min = 0,    max = 1,   step = 1, type = "int" })
+	p:define(3, "bgLayer2",  1,    { min = 0,    max = 1,   step = 1, type = "int" })
+	p:define(4, "bgLayer3",  1,    { min = 0,    max = 1,   step = 1, type = "int" })
+	p:define(5, "dw",        0.83, { min = 0.01, max = 2.0, type = "float" })
+	p:define(6, "dh",        0.66, { min = 0.01, max = 2.0, type = "float" })
+	p:define(7, "nBalls",    30,   { min = 2,    max = 80,  step = 1, type = "int" })
+	p:define(8, "radiusX",   70,   { min = 10,   max = 200, type = "float" })
+	p:define(9, "radiusY",   50,   { min = 10,   max = 200, type = "float" })
+	p:define(10,"ballSize",  7,    { min = 1,    max = 30,  type = "float" })
 
 end
 
@@ -65,14 +69,14 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 	patch:setCanvases()
 
 	init_params()
 
-	patch.push = Lfo:new(0.1, 0)
+	patch.push = Lfo:new(clock.syncRate("4bar"), 0)
 
 end
 
@@ -109,11 +113,11 @@ local function draw_bg()
 	love.graphics.setCanvas(patch.canvases.balls)
 	love.graphics.clear()
 
-	local nBalls = 30
+	local nBalls = math.floor(p:get("nBalls"))
 
-	local radiusX = 70
-	local radiusY = 50
-	local size = 7
+	local radiusX = p:get("radiusX")
+	local radiusY = p:get("radiusY")
+	local size = p:get("ballSize")
 
 	local dw = p:get("dw")
 	local dh = p:get("dh")
@@ -177,6 +181,7 @@ function patch.update()
 		patch.graphics.bg.size = {x = patch.graphics.bg.image:getPixelWidth(), y = patch.graphics.bg.image:getPixelHeight()}
 	end
 
+	patch.push:UpdateFreq(clock.syncRate("4bar"))
 	patch.push:UpdateTrigger(true)
 
 	patch:mainUpdate()

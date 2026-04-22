@@ -28,6 +28,9 @@ local function init_params()
 	local p = patch.resources.parameters
 
     g:setName(1, "video")           g:set("video", "demos/demo11/assets/evil_eyes.ogg")
+
+	p:define(1, "playbackSpeed", 1.0, { min = -2,  max = 4,  type = "float" })
+	p:define(2, "loopEnd",       2.0, { min = 0.5, max = 10, type = "float" })
 end
 
 --- @public patchControls evaluate user keyboard controls
@@ -39,13 +42,13 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	local g = patch.resources.graphics
 
 	PALETTE = palettes.PICO8
 
-	patch.setCanvases()
+	patch:setCanvases()
 
 	init_params()
 
@@ -63,8 +66,8 @@ end
 
 --- @private draw_bg draw background graphics
 local function draw_stuff()
-	g = patch.resources.graphics
-	p = patch.resources.parameters
+	local g = patch.resources.graphics
+	local p = patch.resources.parameters
 
 end
 
@@ -95,7 +98,9 @@ end
 
 function patch.update()
     patch:mainUpdate()
-    -- handle loop
+    local p = patch.resources.parameters
+    patch.video.playbackSpeed = p:get("playbackSpeed")
+    patch.video.loopEnd = p:get("loopEnd")
     videoutils.handleLoop(patch.video)
 end
 

@@ -6,10 +6,6 @@ local Timer = lovjRequire("lib/timer")
 local Envelope = lovjRequire("lib/signals/envelope")
 
 local cfg_timers = lovjRequire("cfg/cfg_timers")
-local cfg_bpm = lovjRequire ("cfg/cfg_bpm")
-
--- declaring function
-local function bpmSet(s)  end
 
 local patch = Patch:new()
 
@@ -30,30 +26,30 @@ end
 
 local function init_params()
 	local p = patch.resources.parameters
-	return p 
+	p:define(1, "numRects",    10,   { min = 2,   max = 30,  step = 1, type = "int" })
+	p:define(2, "heightJitter", 20,  { min = 1,   max = 60,  type = "float" })
+	p:define(3, "driftSpeed",  20,   { min = 0,   max = 100, type = "float" })
+	p:define(4, "waveSpeed",   50,   { min = 0,   max = 200, type = "float" })
+	return p
 end
 
 
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	patch.invert = false
 	patch:setShaders()
 	patch:setCanvases()
 
-	patch.bpm = 120
 	patch.n = 10
 	patch.localTimer = 0
 
 	patch.timers = {}
-	patch.timers.bpm = Timer:new(60 / patch.bpm )  -- 60 are seconds in 1 minute, 4 are sub-beats
+	patch.timers.bpm = Timer:new(clock.beatDuration())
 	patch.env = Envelope:new(0, 0, 1, 0.5)
 	patch.drawList = {}
 
 	patch.resources.parameters = init_params()
 	patch:assignDefaultDraw()
-
-	-- set bpm to 120
-	patch.commands("bpm = 120")
 end
 
 
@@ -65,14 +61,17 @@ local function recalculateRects()
 	patch.drawList = {}
 
 	-- add new rectangles
-	for i = -1, patch.n-1 do
+	local p = patch.resources.parameters
+	local n = math.floor(p:get("numRects"))
+	local hJitter = p:get("heightJitter")
+	for i = -1, n-1 do
 		local iw = screen.InternalRes.W
 		local ih = screen.InternalRes.H
-		local c = math.random(2)					 -- random inner or outer rectangle
-		local x = math.random(iw / 2)                -- random x coordinate
-		local r = math.random(20) + 1                -- random height offset
-		local y1 = ((ih / patch.n) * i) - r / 2 - 5  -- top of rectangle
-		local y2 = y1 + (ih / patch.n)  + r / 2 + 5  -- bottom of rectangle
+		local c = math.random(2)
+		local x = math.random(iw / 2)
+		local r = math.random(math.max(1, math.floor(hJitter))) + 1
+		local y1 = ((ih / n) * i) - r / 2 - 5
+		local y2 = y1 + (ih / n)  + r / 2 + 5
 
 		table.insert(patch.drawList, { x = x, y1 = y1, y2 = y2, c = c})
 	end
@@ -84,10 +83,13 @@ local function updateRects()
 	local t = cfg_timers.globalTimer.T
 	local dt = cfg_timers.globalTimer:dt()  -- use this to make the code fps-independent!
 
+	local p = patch.resources.parameters
+	local driftSpd = p:get("driftSpeed")
+	local waveSpd  = p:get("waveSpeed")
 	for k,v in pairs(patch.drawList) do
-		v.y1 = v.y1 + (math.sin(t + v.y1 / screen.InternalRes.H)) * 20 * dt
-		v.y2 = v.y2 + (math.sin(t*1.5) + math.atan(v.x/v.y2))     * 50 * dt
-		v.x  = v.x  + (math.cos(t*3 - v.y1/screen.InternalRes.H)) * 30 * dt
+		v.y1 = v.y1 + (math.sin(t + v.y1 / screen.InternalRes.H)) * driftSpd * dt
+		v.y2 = v.y2 + (math.sin(t*1.5) + math.atan(v.x/v.y2))     * waveSpd * dt
+		v.x  = v.x  + (math.cos(t*3 - v.y1/screen.InternalRes.H)) * driftSpd * 1.5 * dt
 	end
 
 end
@@ -127,6 +129,7 @@ function patch.update()
 	patch:mainUpdate()
 
 	-- Update bpm timer
+	patch.timers.bpm:set_reset_t(clock.beatDuration())
 	patch.timers.bpm:update()
 
 	-- Upon bpm timer trigger, update envelope trigger
@@ -140,22 +143,8 @@ function patch.update()
 	end
 end
 
---- @public patch.commands evaluate commands executed by command line
 function patch.commands(s)
-	if bpmSet(s) then return true end
-end
 
-
---- @private bpmSet set bpm value based on string instruction
-local function bpmSet(s)
-	-- BPM setter
-	local value = string.match(s, "bpm%s*=%s*(.*)")
-	if tonumber(value) then
-		logInfo("Setting bpm to " .. value)
-		patch.bpm = tonumber(value)
-		patch.timers.bpm = Timer:new(60 / patch.bpm )
-		return true
-	end
 end
 
 return patch

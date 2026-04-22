@@ -18,11 +18,11 @@ local patch = Patch:new()
 
 --- @private init_params initialize patch parameters
 local function init_params()
-	local g = patch.resources.graphics
 	local p = patch.resources.parameters
-
-	patch.resources.parameters = p
-	patch.resources.graphics = g
+	p:define(1, "waveAmp",   10,   { min = 0,   max = 40,  type = "float" })
+	p:define(2, "wavePeriod", 20,  { min = 5,   max = 100, type = "float" })
+	p:define(3, "colorSpeed", 8,   { min = 1,   max = 30,  type = "float" })
+	p:define(4, "scrollSpeed",3,   { min = 0.5, max = 10,  type = "float" })
 end
 
 --- @public patchControls evaluate user keyboard controls
@@ -46,14 +46,14 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 	patch:setCanvases()
 
 	init_params()
 
-	patch.push = Lfo:new(0.1, 0)
+	patch.push = Lfo:new(clock.syncRate("4bar"), 0)
 
 	patch.fontSize = 8
 	patch.ANSI_font = love.graphics.newFont("demos/demo16/assets/arial.ttf", patch.fontSize)
@@ -116,12 +116,17 @@ local function draw_scene()
 
 	love.graphics.setFont(patch.ANSI_font)
 
+	local waveAmp   = p:get("waveAmp")
+	local wavePeriod = p:get("wavePeriod")
+	local colorSpd  = p:get("colorSpeed")
+	local scrollSpd = p:get("scrollSpeed")
+
 	for j = -patch.fontSize, screen.InternalRes.W, patch.fontSize do
 		for k = -patch.fontSize, screen.InternalRes.H, patch.fontSize do
 			local x = j
-			local y = k + 10*math.sin((2*math.pi)*(t + j/ 20))
-			local alpha = math.abs( 1 - (t + k / 100 + j/100)%1)
-			local c = (math.floor(8*t+j/10 + math.sin(t/3)*j*j/1000 +  math.sin(t/5)*k*k/1000) % #ansi_table) + 1
+			local y = k + waveAmp*math.sin((2*math.pi)*(t + j/ wavePeriod))
+			local alpha = math.abs( 1 - (t*scrollSpd + k / 100 + j/100)%1)
+			local c = (math.floor(colorSpd*t+j/10 + math.sin(t/scrollSpd)*j*j/1000 +  math.sin(t/5)*k*k/1000) % #ansi_table) + 1
 			love.graphics.setColor((j/100+t + j*k/1000)%1, (math.abs(math.sin(2*math.pi*t + k/200))) % 1, (c/20), alpha)
 			love.graphics.print(ansi_table[c], x, y)
 
@@ -156,6 +161,7 @@ end
 function patch.update()
 	local t = cfg_timers.globalTimer.T
 
+	patch.push:UpdateFreq(clock.syncRate("4bar"))
 	patch.push:UpdateTrigger(true)
 
 	patch:mainUpdate()

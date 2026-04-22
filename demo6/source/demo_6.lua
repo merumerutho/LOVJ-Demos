@@ -38,7 +38,12 @@ local function init_params()
 	local p = patch.resources.parameters
 	g:setName(1, "bg")				g:set("bg", "demos/demo6/assets/bg.png")
 	get_bg()
-	p:setName(1, "bgSpeed")			p:set("bgSpeed", 10)
+	p:define(1, "bgSpeed",    10,   { min = 1,   max = 50,  type = "float" })
+	p:define(2, "ballAmp",    50,   { min = 0,   max = 150, type = "float" })
+	p:define(3, "waveAmp",    30,   { min = 0,   max = 100, type = "float" })
+	p:define(4, "lfoSize",    20,   { min = 0,   max = 80,  type = "float" })
+	p:define(5, "scrollX",    20,   { min = 0,   max = 60,  type = "float" })
+	p:define(6, "scrollY",    10,   { min = 0,   max = 60,  type = "float" })
 
 	return p, g
 end
@@ -65,20 +70,19 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 
 	patch:setCanvases()
 
 	patch.resources.parameters,
 	patch.resources.graphics = init_params()
 
-	patch.bpm = 120
 	patch.timers = {}
-	patch.timers.bpm = Timer:new(60 / patch.bpm )  -- 60 are seconds in 1 minute, 4 are sub-beats
+	patch.timers.bpm = Timer:new(clock.beatDuration())
 
 	patch.env = Envelope:new(0.005, 0, 1, 0.5)
-	patch.lfo = Lfo:new(patch.bpm/60, 0)
+	patch.lfo = Lfo:new(clock.syncRate("1beat"), 0)
 
 	patch.sym_shader = love.graphics.newShader(table.getValueByName("09_quadmirror", cfgShaders.PostProcessShaders))
 end
@@ -99,8 +103,8 @@ local function draw_bg()
 	-- Generate background pic
 	for x = -patch.graphics.bg.size.x, screen.InternalRes.W, patch.graphics.bg.size.x do
 		for y = -patch.graphics.bg.size.y, screen.InternalRes.H, patch.graphics.bg.size.y do
-			local lx = x + (t*20)% BG_SPRITE_SIZE
-			local ly = y + (t*10)% BG_SPRITE_SIZE
+			local lx = x + (t*p:get("scrollX"))% BG_SPRITE_SIZE
+			local ly = y + (t*p:get("scrollY"))% BG_SPRITE_SIZE
 			local rx = (lx - screen.InternalRes.W / 2)
 			local ry = (ly - screen.InternalRes.H / 2)
 			local rIdx = math.floor((idx + math.sqrt((rx*rx) + (ry*ry)) / 10)
@@ -112,7 +116,7 @@ local function draw_bg()
 	local offY = 50*math.sin(t*1.2)
 	local offX = 50*math.cos(t*1.9)
 
-	local amp = patch.env:Calculate(t) * 50
+	local amp = patch.env:Calculate(t) * p:get("ballAmp")
 
 	for x = -200, 120, 10 do
 		local size = 5 + 2 * math.sin(t*10 + x/50)
@@ -141,7 +145,7 @@ local function draw_bg()
 								amp + screen.InternalRes.W/2+x, size)
 	end
 
-	local rsize = patch.lfo:Sine(t) * 20
+	local rsize = patch.lfo:Sine(t) * p:get("lfoSize")
 
 	love.graphics.setColor(1,1,1,0.2*((t*10)%1))
 	love.graphics.rectangle("fill", screen.InternalRes.W/2 - 100 - rsize, screen.InternalRes.H/2 - 50 - rsize,
@@ -181,11 +185,12 @@ end
 
 function patch.update()
 	patch:mainUpdate()
+	patch.timers.bpm:set_reset_t(clock.beatDuration())
 	patch.timers.bpm:update()
+	patch.lfo:UpdateFreq(clock.syncRate("1beat"))
 
 	patch.env:UpdateTrigger(patch.timers.bpm:activated())
 	patch.lfo:UpdateTrigger(true)
-
 end
 
 

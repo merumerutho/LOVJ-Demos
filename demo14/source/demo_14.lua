@@ -15,12 +15,14 @@ local function init_params()
 	local g = patch.resources.graphics
 	local p = patch.resources.parameters
 
-	p:setName(1, "numBranches")			p:set("numBranches", 40)
-	p:setName(2, "ampModulator")		p:set("ampModulator", 10)
-	p:setName(3, "timeFactor")			p:set("timeFactor", 0)
-	p:setName(4, "triangleCenterAmp")	p:set("triangleCenterAmp", 10)
-	p:setName(5, "beta")				p:set("beta", 0.5)
-	p:setName(6, "rBase")				p:set("rBase", 50)
+	p:define(1, "numBranches",       40,   { min = 3,   max = 120, step = 1, type = "int" })
+	p:define(2, "ampModulator",      10,   { min = 0,   max = 50,  type = "float" })
+	p:define(3, "timeFactor",        0,    { min = 0,   max = 2,   type = "float" })
+	p:define(4, "triangleCenterAmp", 10,   { min = 0,   max = 100, type = "float" })
+	p:define(5, "beta",              0.5,  { min = 0,   max = 3.14,type = "float" })
+	p:define(6, "rBase",             50,   { min = 10,  max = 200, type = "float" })
+	p:define(7, "bgGridSize",       50,    { min = 10,  max = 200, step = 1, type = "int" })
+	p:define(8, "pulseSpeed",      300,    { min = 50,  max = 1000,type = "float" })
 
 end
 
@@ -45,14 +47,14 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 	patch:setCanvases()
 
 	init_params()
 
-	patch.push = Lfo:new(0.1, 0)
+	patch.push = Lfo:new(clock.syncRate("4bar"), 0)
 end
 
 --- @private draw_bg draw background graphics
@@ -67,9 +69,7 @@ local function draw_scene()
 
 	love.graphics.setColor(1,1,1,1)
 
-	local m = 50
-
-	-- background
+	local m = p:get("bgGridSize")
 
 	for x = -screen.InternalRes.W / m, screen.InternalRes.W, screen.InternalRes.W / m do
 		for y = -screen.InternalRes.H / m, screen.InternalRes.H, screen.InternalRes.H / m do
@@ -117,7 +117,7 @@ local function draw_scene()
 	-- pulsating circle
 	love.graphics.setColor(0,0,0,1)
 	for radius = 0, 20 do
-		love.graphics.circle("line", cx, cy, radius + ((t*300)%200))
+		love.graphics.circle("line", cx, cy, radius + ((t*p:get("pulseSpeed"))%200))
 	end
 
 end
@@ -150,7 +150,7 @@ function patch.update()
 	if kp.isDown("down") and kp.isDown("a") then p:set("ampModulator", p:get("ampModulator")-0.01) end
 
 	if kp.isDown("up") and kp.isDown("t") then p:set("timeFactor", p:get("timeFactor")+0.01) end
-	if kp.isDown("down") and kp.isDown("t") then p:set("timeFactor", p:get("timeFactor")-0.01) end
+	if kp.isDown("down") and kp.isDown("t") then p:set("timeFactor", math.max(0, p:get("timeFactor")-0.01)) end
 
 	if kp.isDown("up") and kp.isDown("c") then p:set("triangleCenterAmp", p:get("triangleCenterAmp")+0.1) end
 	if kp.isDown("down") and kp.isDown("c") then p:set("triangleCenterAmp", p:get("triangleCenterAmp")-0.1) end
@@ -161,8 +161,7 @@ function patch.update()
 	if kp.isDown("up") and kp.isDown("r") then p:set("rBase", p:get("rBase")+1) end
 	if kp.isDown("down") and kp.isDown("r") then p:set("rBase", p:get("rBase")-1) end
 
-	p:set("timeFactor", math.max(0, p:get("timeFactor")))
-
+	patch.push:UpdateFreq(clock.syncRate("4bar"))
 	patch.push:UpdateTrigger(true)
 
 	patch:mainUpdate()

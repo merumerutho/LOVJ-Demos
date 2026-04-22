@@ -6,6 +6,7 @@ local cfg_timers = lovjRequire("cfg/cfg_timers")
 local cfg_screen = lovjRequire("cfg/cfg_screen")
 local Envelope = lovjRequire("lib/signals/envelope")
 local Lfo = lovjRequire("lib/signals/lfo")
+local Feedback = lovjRequire("lib/feedback")
 
 local patch = Patch:new()
 
@@ -13,11 +14,20 @@ local PALETTE
 
 --- @private init_params initialize patch parameters
 local function init_params()
-	local g = patch.resources.graphics
 	local p = patch.resources.parameters
-
-	patch.resources.parameters = p
-	patch.resources.graphics = g
+	p:define(1,  "sphereCount",  40,   { min = 2,    max = 80,   step = 1, type = "int" })
+	p:define(2,  "sphereRadius", 7,    { min = 1,    max = 30,   type = "float" })
+	p:define(3,  "spreadX",      100,  { min = 10,   max = 300,  type = "float" })
+	p:define(4,  "spreadY",      80,   { min = 10,   max = 300,  type = "float" })
+	p:define(5,  "speedX",       0.015, { min = 0.001,max = 0.1,  type = "float" })
+	p:define(6,  "speedY",       0.05,  { min = 0.001,max = 0.25, type = "float" })
+	p:define(7,  "drift",        50,   { min = 0,    max = 200,  type = "float" })
+	p:define(8,  "fbkRotation",  1.0,  { min = 0,    max = 6.28, type = "float" })
+	p:define(9,  "fbkZoom",      1.05, { min = 0.9,  max = 1.3,  type = "float" })
+	p:define(10, "fbkDecay",     0.7,  { min = 0.1,  max = 1.0,  type = "float" })
+	p:define(11, "fbkTintR",     1.0,  { min = 0,    max = 1,    type = "float" })
+	p:define(12, "fbkTintG",     0.9,  { min = 0,    max = 1,    type = "float" })
+	p:define(13, "fbkTintB",     1.0,  { min = 0,    max = 1,    type = "float" })
 end
 
 --- @public patchControls evaluate user keyboard controls
@@ -29,35 +39,25 @@ end
 
 --- @public setCanvases (re)set canvases for this patch
 function patch:setCanvases()
-	Patch.setCanvases(patch)  -- call parent function
-    
-	-- patch-specific execution (window canvas)
+	Patch.setCanvases(patch)
+
 	if cfg_screen.UPSCALE_MODE == cfg_screen.LOW_RES then
         patch.canvases.c1 = love.graphics.newCanvas(2*screen.InternalRes.W, 2*screen.InternalRes.H)
-		patch.canvases.fbk = love.graphics.newCanvas(2*screen.InternalRes.W, 2*screen.InternalRes.H)
-		patch.canvases.bak = love.graphics.newCanvas(2*screen.InternalRes.W, 2*screen.InternalRes.H)
-		patch.canvases.top1 = love.graphics.newCanvas(2*screen.InternalRes.W, 2*screen.InternalRes.H)
-		patch.canvases.top2 = love.graphics.newCanvas(2*screen.InternalRes.W, 2*screen.InternalRes.H)
-		patch.canvases.globaltop = love.graphics.newCanvas(2*screen.InternalRes.W, 2*screen.InternalRes.H)
 	else
 		patch.canvases.c1 = love.graphics.newCanvas(2*screen.ExternalRes.W, 2*screen.ExternalRes.H)
-		patch.canvases.fbk = love.graphics.newCanvas(2*screen.ExternalRes.W, 2*screen.ExternalRes.H)
-		patch.canvases.bak = love.graphics.newCanvas(2*screen.ExternalRes.W, 2*screen.ExternalRes.H)
-		patch.canvases.top1 = love.graphics.newCanvas(2*screen.ExternalRes.W, 2*screen.ExternalRes.H)
-		patch.canvases.top2 = love.graphics.newCanvas(2*screen.ExternalRes.W, 2*screen.ExternalRes.H)
-		patch.canvases.globaltop = love.graphics.newCanvas(2*screen.ExternalRes.W, 2*screen.ExternalRes.H)
 	end
 end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 
 	PALETTE = palettes.PICO8
 
 	patch:setCanvases()
-    
+	patch.fbk = Feedback:new({ clearColor = {0, 0, 0, 0} })
+
 	init_params()
 end
 
@@ -65,102 +65,52 @@ end
 --- @public patch.draw draw routine
 function patch.draw()
 	local t = cfg_timers.globalTimer.T
+	local p = patch.resources.parameters
 
-	local cx, cy = screen.InternalRes.W , screen.InternalRes.H
+	local cx, cy = screen.InternalRes.W, screen.InternalRes.H
 
+	local count    = math.floor(p:get("sphereCount"))
+	local radius   = p:get("sphereRadius")
+	local spreadX  = p:get("spreadX")
+	local spreadY  = p:get("spreadY")
+	local speedX   = clock.beatsToHz(p:get("speedX"))
+	local speedY   = clock.beatsToHz(p:get("speedY"))
+	local drift    = p:get("drift")
 
 	patch:drawSetup()
 
-    -- ## main graphics pipeline ##
+	-- draw fresh content onto c1
     love.graphics.setColor(1,1,1,1)
 	love.graphics.setCanvas(patch.canvases.c1)
-	love.graphics.clear(0,0,0,0)  -- erase as transparent
+	love.graphics.clear(0,0,0,0)
 
-
-	--for i = 30, 0, -1 do
-	--	love.graphics.setColor(1,1,1-i/100,1)
-	--	love.graphics.circle("fill", cx , cy, i + 50*math.abs(math.sin(2*math.pi*t)))
-	--end
-
-	-- spheres play
-	for i = -10, 10, .5 do
-		local c = 1--((i+20)/10)
-		love.graphics.setColor(c, c, c, 1)
+	local half = count / 2
+	for i = -half, half, 0.5 do
+		love.graphics.setColor(1, 1, 1, 1)
 		love.graphics.circle("fill",
-							 cx + 100 * math.sin(2*math.pi*(t/30+i/3)) + 50* math.cos(2*math.pi*(t/100 + i/40)),
-							 cy + 80 * math.cos(2*math.pi*(t/10+i/20)) + 50 * math.sin(2*math.pi*(t/100 + i/40)),
-							 7)
-	--	local r = 300 + 50 * math.cos(2*math.pi*(t+i/100))
-	--	local lx = cx
-	--	love.graphics.setColor(i/50,1,1,1)
-	--	love.graphics.line(lx + i, cy-r/2, lx-i, cy+r/2)
+			cx + spreadX * math.sin(2*math.pi*(t*speedX + i/3)) + drift * math.cos(2*math.pi*(t/100 + i/40)),
+			cy + spreadY * math.cos(2*math.pi*(t*speedY + i/20)) + drift * math.sin(2*math.pi*(t/100 + i/40)),
+			radius)
 	end
 
+	-- feedback with animated transform
+	local fbkRot   = p:get("fbkRotation")
+	local fbkZoom  = p:get("fbkZoom")
+	local fbkDecay = p:get("fbkDecay")
 
-	-- rectangle play
-	--local w = 20*math.max(0.5, math.sin(2*math.pi*t))
-	--for i = -5, 5 do
-	--	for j = -5, 5 do
-	--		love.graphics.rectangle("fill", cx + i * 50 * math.sin(2*math.pi*(t/10 + i/5)) - w/2, cy + j * 50 * math.cos(2*math.pi*(t/10+j/5))- w/2, w, w)
-	--	end
-	--end
+	patch.fbk:process(patch.canvases.c1, {
+		rotation = t * fbkRot,
+		scaleX = fbkZoom,
+		scaleY = fbkZoom,
+		tint = { p:get("fbkTintR"), p:get("fbkTintG"), p:get("fbkTintB"), fbkDecay },
+	})
 
-
-	-- cross rectangles
-	--local cw, ch = 2*cx/3 + 100 * math.cos(2*math.pi*t/15) , 250 + 50 * math.sin(2*math.pi*t/20)
-	--local crx, cry = cx/4 + (cx/4-cw/2), cy/4 + (cy/4-ch/2)
-
-	-- erase globalTop (make it black for correct alpha multiply)
-	--love.graphics.setCanvas(patch.canvases.globalTop)
-	--love.graphics.clear(0,0,0,1)
-
-	-- prepare top1
-	--love.graphics.clear(0,0,0,1)
-	--love.graphics.setColor(1,1,1,1)
-	--love.graphics.rectangle("fill", crx, cry, cw, ch, 15, 15)
-	--love.graphics.setCanvas(patch.canvases.top1)
-
-
-	-- copy on top2
-	--love.graphics.setCanvas(patch.canvases.top2)
-	--love.graphics.clear(0,0,0, t%1)
-	--love.graphics.setColor(1,1,1,1)
-	--love.graphics.draw(patch.canvases.top1, cx/2, cy/2, 3.1415/2, cx/2, cy/2)
-
-
-	-- ## feedback pipeline ##
-    love.graphics.setCanvas(patch.canvases.fbk)
-	love.graphics.draw(patch.canvases.bak, cx, cy, t%1, 1 + (t%.1)*math.abs(math.sin(t)), 1.1, cx, cy)
-	love.graphics.setCanvas(patch.canvases.bak)
-	love.graphics.clear(0,0,0,0)
-	love.graphics.setColor(1.0,0.9,1,0.7)  -- reduced opacity
-	love.graphics.draw(patch.canvases.fbk)
-	love.graphics.setColor(1,1,1,1)
-    love.graphics.draw(patch.canvases.c1)
-
-	-- %% cross composition pipeline %%
-	--love.graphics.setCanvas(patch.canvases.globaltop)
-	--love.graphics.setColor(1,1,1,1)
-	--love.graphics.draw(patch.canvases.top1, cx/2, cy/2, 0, 1, 1, cx/2, cy/2)
-	--love.graphics.draw(patch.canvases.top2, cx/2, cy/2, 0, 1, 1, cx/2, cy/2)
-
-    -- ## compose output pipeline ##
+	-- compose onto main
     love.graphics.setCanvas(patch.canvases.main)
 	love.graphics.clear(0,0,0,0)
-	--love.graphics.draw(patch.canvases.globaltop)
 	love.graphics.setColor(1,1,1,1)
-	love.graphics.draw(patch.canvases.fbk, -cx/2, -cy/2)
-	love.graphics.setColor(1,1,1,1)
-    --love.graphics.draw(patch.canvases.c1, -cx/2, -cy/2)
-
-	--for i = 0,4 do
-	--	love.graphics.circle("fill", cx/2 + 100 * math.cos(2*math.pi*(t+i/4)), cy/2 + 100 * math.sin(2*math.pi*(t+i/4)), 10)
-	--end
-
-	-- %% alphamasking pipeline %%
-	--love.graphics.setBlendMode("multiply", "premultiplied")
-	--love.graphics.draw(patch.canvases.globaltop)
-	--love.graphics.setBlendMode("alpha")
+	local offX, offY = patch.fbk:getDrawOffset()
+	love.graphics.draw(patch.fbk:getOutput(), -cx/2 + offX, -cy/2 + offY)
 
 	return patch:drawExec()
 end

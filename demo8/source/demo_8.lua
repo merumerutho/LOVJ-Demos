@@ -15,7 +15,9 @@ local function init_params()
 	local g = patch.resources.graphics
 	local p = patch.resources.parameters
 
-	p:setName(1, "speed")		p:set("speed", 100)
+	p:define(1, "speed",      100,    { min = 10,  max = 500,  type = "float" })
+	p:define(2, "horizon",    0.225,  { min = 0.05,max = 0.45, type = "float" })
+	p:define(3, "sway",       50,     { min = 0,   max = 150,  type = "float" })
 
 	return p, g
 end
@@ -29,8 +31,8 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	patch:setCanvases()
 
 	patch.resources.parameters,
@@ -47,7 +49,7 @@ local function draw_stuff()
 	local w = screen.InternalRes.W
 	local h = screen.InternalRes.H
 
-	local gap = 0.225 * screen.InternalRes.H + 20 + 16*math.sin(t/8)
+	local gap = p:get("horizon") * screen.InternalRes.H + 20 + 16*math.sin(t/8)
 
 	love.graphics.setColor(0,0,0,1)
 
@@ -66,10 +68,10 @@ local function draw_stuff()
 	local spacing = screen.InternalRes.W / 320 + 1
 
 	for x = -n, n, spacing do
-		love.graphics.line(w/2 - 4*x + 50*math.sin(t/2), gap - 16,
-				w/2 - 24*x + 50*math.sin(t/2), -16)
-		love.graphics.line(w/2 - 4*x + 50*math.sin(t/2), h - gap + 16,
-				w/2 - 24*x + 50*math.sin(t/2), h + 16)
+		love.graphics.line(w/2 - 4*x + p:get("sway")*math.sin(t/2), gap - 16,
+				w/2 - 24*x + p:get("sway")*math.sin(t/2), -16)
+		love.graphics.line(w/2 - 4*x + p:get("sway")*math.sin(t/2), h - gap + 16,
+				w/2 - 24*x + p:get("sway")*math.sin(t/2), h + 16)
 	end
 
 	love.graphics.setColor(1,1,1,1)

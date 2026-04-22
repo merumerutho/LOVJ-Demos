@@ -41,7 +41,7 @@ local shader_code = [[
 	{
 		float modSize = 5.;
 		vec3 coords = vec3(modSize/2 + .7 * sin(sin(p.z/100)+abs(p.y-.5)), modSize/2 + .1 * cos(p.z) , modSize/2);
-		vec4 s = vec4(coords, .5 + .5 * cos(p.z/10) + .5*sin(p.z/100 + abs(p.y/10))); //Sphere. xyz is position w is radius
+		vec4 s = vec4(coords, _ballSize + .5 * cos(p.z/10) + .5*sin(p.z/100 + abs(p.y/10)));
 		float sphereDist = length(mod(p.xy, modSize)-s.xz) + .12 * sin(_osc*5+.1*p.z+p.x*10.+p.y*5.) - s.w;
 		return sphereDist;
 	}
@@ -96,8 +96,9 @@ local function init_params()
 	local g = patch.resources.graphics
 	local p = patch.resources.parameters
 
-	p:setName(1, "colorInversion") p:set("colorInversion", 0)
-	p:setName(2, "ballSize") p:set("ballSize", .1)
+	p:define(1, "colorInversion", 0,    { min = 0, max = 1,   type = "float" })
+	p:define(2, "ballSize",      0.1,  { min = 0, max = 0.7, type = "float" })
+	p:define(3, "lfoFreq",       0.5,  { min = 0.0625, max = 2, type = "float" })
 
 	patch.resources.parameters = p
 end
@@ -105,53 +106,43 @@ end
 --- @public patchControls evaluate user keyboard controls
 function patch.patchControls()
 	local p = patch.resources.parameters
-	-- update the colorInversion parameter
-	if kp.isDown("up") then p:set("colorInversion", p:get("colorInversion")+.1) end
-	if kp.isDown("down") then p:set("colorInversion", p:get("colorInversion")-.1) end
-	-- clamp colorInversion between 0 and 1
-	p:set("colorInversion", math.min(math.max(p:get("colorInversion"), 0), 1) )
+	if kp.isDown("up") then p:set("colorInversion", math.min(p:get("colorInversion") + .1, 1)) end
+	if kp.isDown("down") then p:set("colorInversion", math.max(p:get("colorInversion") - .1, 0)) end
 
-	if kp.isDown("left") then p:set("ballSize", p:get("ballSize")-.01) end
-	if kp.isDown("right") then p:set("ballSize", p:get("ballSize")+.01) end
-	-- clamp colorInversion between 0 and 1
-	p:set("ballSize", math.min(math.max(p:get("ballSize"), 0), .7) )
-
-
+	if kp.isDown("left") then p:set("ballSize", math.max(p:get("ballSize") - .01, 0)) end
+	if kp.isDown("right") then p:set("ballSize", math.min(p:get("ballSize") + .01, .7)) end
 end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 	patch:setCanvases()
 
 	init_params()
 
-	patch.lfo = Lfo:new(1.,0)
+	patch.lfo = Lfo:new(clock.beatsToHz(patch.resources.parameters:get("lfoFreq")), 0)
+	patch.compiledShader = love.graphics.newShader(shader_code)
+	patch.srcCanvas = love.graphics.newCanvas(screen.InternalRes.W, screen.InternalRes.H)
 end
 
---- @private draw_bg draw background graphics
 local function draw_stuff()
-	local g = patch.resources.graphics
 	local p = patch.resources.parameters
-
 	local t = cfg_timers.globalTimer.T
 
-	local c = love.graphics.newCanvas(screen.InternalRes.W, screen.InternalRes.H)
-	love.graphics.setCanvas(c)
+	love.graphics.setCanvas(patch.srcCanvas)
 
-	local shader
-	if cfg_shaders.enabled then
-		shader = love.graphics.newShader(shader_code)
-		love.graphics.setShader(shader)
-		shader:send("_time", t)
-		shader:send("_osc", t + .1 * patch.lfo:Sine(t))
-		shader:send("_colorInversion", p:get("colorInversion"))
+	if cfg_shaders.enabled and patch.compiledShader then
+		love.graphics.setShader(patch.compiledShader)
+		patch.compiledShader:send("_time", t)
+		patch.compiledShader:send("_osc", t + .1 * patch.lfo:Sine(t))
+		patch.compiledShader:send("_colorInversion", p:get("colorInversion"))
+		patch.compiledShader:send("_ballSize", p:get("ballSize"))
 	end
 
 	love.graphics.setCanvas(patch.canvases.main)
-	love.graphics.draw(c)
+	love.graphics.draw(patch.srcCanvas)
 
 end
 
@@ -170,6 +161,7 @@ function patch.update()
 	local t = cfg_timers.globalTimer.T
 
 	patch:mainUpdate()
+	patch.lfo:UpdateFreq(clock.beatsToHz(patch.resources.parameters:get("lfoFreq")))
 	patch.lfo:UpdateTrigger(t)
 end
 

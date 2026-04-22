@@ -5,11 +5,7 @@ local Timer = lovjRequire("lib/timer")
 local Envelope = lovjRequire("lib/signals/envelope")
 local palettes = lovjRequire("lib/utils/palettes")
 local kp = lovjRequire("lib/utils/keypress")
----
 local cfg_timers = lovjRequire("cfg/cfg_timers")
-local cfg_bpm = lovjRequire("cfg/cfg_bpm")
-
----
 
 -- import pico8 palette
 local PALETTE = palettes.PICO8
@@ -26,8 +22,12 @@ end
 local function init_params()
 	local p = patch.resources.parameters
 
-	p:setName(1, "a")			p:set("a", 0.5)
-	p:setName(2, "b")			p:set("b", 1)
+	p:define(1, "a",         0.5,  { min = -5,  max = 5,   type = "float" })
+	p:define(2, "b",         1.0,  { min = -5,  max = 5,   type = "float" })
+	p:define(3, "gridSize",  20,   { min = 5,   max = 40,  step = 1, type = "int" })
+	p:define(4, "pixelSize", 3,    { min = 1,   max = 10,  step = 1, type = "int" })
+	p:define(5, "wobble",    8,    { min = 0,   max = 30,  type = "float" })
+	p:define(6, "timeScale", 1.0,  { min = 0.1, max = 5.0, type = "float" })
 
 	return p
 end
@@ -61,17 +61,15 @@ function patch.patchControls()
 end
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 
 	patch.resources.parameters = init_params()
 
 	patch:setCanvases()
 
-	patch.bpm = cfg_bpm.default_bpm
-
 	patch.timers = {}
-	patch.timers.bpm = Timer:new(60 / patch.bpm )  -- 60 are seconds in 1 minute, 4 are sub-beats
+	patch.timers.bpm = Timer:new(clock.beatDuration())
 
 	patch.env = Envelope:new(0.005, 0, 1, 0.5)
 end
@@ -83,28 +81,26 @@ function patch.draw()
 	local p = patch.resources.parameters
 	local t = cfg_timers.globalTimer.T
 
-	local points_list = {}
-	-- draw picture
-	for x = -20, 20, .25 do
-		for y = -20, 20, .25 do
-			-- calculate oscillating radius
-			local r = ((x * x) + (y * y)) + 10 * math.sin(t / 2.5)
-			-- apply time-dependent rotation
-			local x1 = x * math.cos(t) - y * math.sin(t)
-			local y1 = x * math.sin(t) + y * math.cos(t)
-			-- calculate pixel position to draw
+	local gridSize  = math.floor(p:get("gridSize"))
+	local pixelSize = math.floor(p:get("pixelSize"))
+	local wobble    = p:get("wobble")
+	local timeScale = p:get("timeScale")
+	local tScaled   = t * timeScale
+
+	for x = -gridSize, gridSize, .25 do
+		for y = -gridSize, gridSize, .25 do
+			local r = ((x * x) + (y * y)) + 10 * math.sin(tScaled / 2.5)
+			local x1 = x * math.cos(tScaled) - y * math.sin(tScaled)
+			local y1 = x * math.sin(tScaled) + y * math.cos(tScaled)
 			local w, h = screen.InternalRes.W, screen.InternalRes.H
 			local px = w / 2 + (r - p:get("b")) * x1
 			local py = h / 2 + (r - p:get("a")) * y1
-			px = px + 8 * math.cos(r)
-			-- calculate color position in lookup table
+			px = px + wobble * math.cos(r)
 			local col = -r * 2 + math.atan(x1, y1)
 			col = palettes.getColor(PALETTE, (math.floor(col) % 16) + 1)
-			-- add to list of points to draw
 			if inScreen(px, py) then
-				--table.insert(points_list, {px, py, col[1], col[2], col[3], patch.env:Calculate(t)})
 				love.graphics.setColor(col[1], col[2], col[3], patch.env:Calculate(t))
-				love.graphics.rectangle("fill", px, py, 3,3)
+				love.graphics.rectangle("fill", px, py, pixelSize, pixelSize)
 			end
 		end
 	end
@@ -116,6 +112,7 @@ end
 
 function patch.update()
 	patch:mainUpdate()
+	patch.timers.bpm:set_reset_t(clock.beatDuration())
 	patch.timers.bpm:update()
 
 	patch.env:UpdateTrigger(patch.timers.bpm:activated())

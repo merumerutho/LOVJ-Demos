@@ -25,7 +25,7 @@ function patch.patchControls()
   	end
 	-- Reset
 	if kp.isDown("r") then
-    	patch.init(patch.slot, patch)
+    	patch.init(patch.slot)
 	end
 	-- hang
 	if kp.isDown("x") then patch.hang = true else patch.hang = false end
@@ -69,13 +69,13 @@ end
 --- @private init_params initialize patch parameters
 local function init_params()
 	local p = patch.resources.parameters
-	p:setName(1, "acceleration")		p:set("acceleration", DEFAULT_ACCELERATION)
+	p:define(1, "acceleration", DEFAULT_ACCELERATION, { min = 0, max = 5, type = "float" })
 	return p
 end
 
 --- @public init initialization function for the patch
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 	patch:setCanvases()
 
@@ -87,7 +87,7 @@ function patch.init(slot)
 	patch.ballList = {}
 	-- generate balls
 	for i = 1, patch.nBalls do
-		newBall(patch.ballList)
+		newBall()
 	end
 	patch.count = patch.nBalls
 end

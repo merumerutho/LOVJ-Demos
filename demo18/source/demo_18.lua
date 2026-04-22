@@ -48,14 +48,11 @@ local function init_params()
 
 	--g:setName(2, "love")				g:set("love", "data/graphics/love.png")
 
-	p:setName(1, "windowSize") 			p:set("windowSize", 0.6)
-	p:setName(2, "showRoach")			p:set("showRoach", true)
-	p:setName(3, "showLove")			p:set("showLove", true)
-	p:setName(4, "drawOutsideEllipse")	p:set("drawOutsideEllipse", true)
-	p:setName(5, "flash")				p:set("flash", true)
-
-	p:setName(6, "sceneCenterX")		p:set("sceneCenterX", screen.InternalRes.W/2)
-	p:setName(7, "sceneCenterY")		p:set("sceneCenterY", screen.InternalRes.H/2)
+	p:define(1, "gridCount",    20,   { min = 2,   max = 40,  step = 1, type = "int" })
+	p:define(2, "showRoach",    1,    { min = 0,   max = 1,   step = 1, type = "int" })
+	p:define(3, "roachScale",   0.75, { min = 0.1, max = 2.0, type = "float" })
+	p:define(4, "animSpeed",    25,   { min = 5,   max = 60,  type = "float" })
+	p:define(5, "bgScale",      0.1,  { min = 0.02,max = 0.5, type = "float" })
 
 	patch.resources.parameters = p
 	patch.resources.graphics = g
@@ -77,8 +74,8 @@ function patch:setCanvases()
 end
 
 
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	patch.hang = false
 	patch:setCanvases()
 
@@ -94,15 +91,14 @@ function patch.draw()
 
 	love.graphics.setCanvas(patch.canvases.main)
 
-	-- background roaches stuff
-	local n = 20
-	local scaling = 0.1
+	local n = math.floor(p:get("gridCount"))
+	local scaling = p:get("bgScale")
+	local animSpd = p:get("animSpeed")
 
-	-- draw background
 	for i = -1, n do
 		for j = -1, n do
 			love.graphics.draw(patch.graphics.roach.image,
-								patch.graphics.roach.frames[math.floor(t*25 + j + i) % NUM_FRAMES_ROACH + 1],
+								patch.graphics.roach.frames[math.floor(t*animSpd + j + i) % NUM_FRAMES_ROACH + 1],
 								(screen.InternalRes.W / n)*i,
 								(screen.InternalRes.H / n)*j,
 								0,
@@ -115,19 +111,17 @@ function patch.draw()
 	love.graphics.setColor(.5+.5*math.sin((2*math.pi)*t),.5+.5*math.sin((2*math.pi)*(t+.3333)),.5+.5*math.sin((2*math.pi)*(t+.6666)),1)
 
 	-- Draw main roach
-	if p:get("showRoach") then
+	local rScale = p:get("roachScale")
+	if p:get("showRoach") == 1 then
 		love.graphics.draw(patch.graphics.roach.image,
-							patch.graphics.roach.frames[math.floor(t*25) % NUM_FRAMES_ROACH + 1],
-							screen.InternalRes.W/2+ROACH_WIDTH*0.75/2,
+							patch.graphics.roach.frames[math.floor(t*animSpd) % NUM_FRAMES_ROACH + 1],
+							screen.InternalRes.W/2+ROACH_WIDTH*rScale/2,
 							10,
 							0,
-							-0.75,
-							0.75)
+							-rScale,
+							rScale)
 	end
 
-	-- remove canvas
-	love.graphics.setCanvas()
-	-- reset color
 	love.graphics.setColor(1,1,1,1)
 
 	return patch:drawExec()

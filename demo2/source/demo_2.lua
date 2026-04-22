@@ -45,9 +45,12 @@ end
 local function ballTrajectory(k, b)
 	local dt = cfg_timers.globalTimer:dt() -- keep it fps independent
 
-	b.x = b.x + b.ax 		* dt * 50
-	b.y = b.y + b.ay 		* dt * 50
-	b.z = b.z + 0.05 * b.az * dt * 50
+	local p = patch.resources.parameters
+	local spd = p:get("speed")
+	local growth = p:get("growthRate")
+	b.x = b.x + b.ax 		  * dt * spd
+	b.y = b.y + b.ay 		  * dt * spd
+	b.z = b.z + growth * b.az * dt * spd
   
   if b.z < 0 then b.z = 0 end
   if (b.x < -b.z or 
@@ -64,22 +67,26 @@ end
 --- @private init_params Initialize parameters for this patch
 local function init_params()
 	local p = patch.resources.parameters
+	p:define(1, "nBalls",     200,  { min = 10,  max = 500, step = 1, type = "int" })
+	p:define(2, "speed",      50,   { min = 5,   max = 200, type = "float" })
+	p:define(3, "growthRate", 0.05,  { min = 0.01,max = 0.2, type = "float" })
+	p:define(4, "radiusPow",  1.6,  { min = 0.5, max = 3.0, type = "float" })
 	return p
 end
 
 
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	patch.hang = false
 	patch:setCanvases()
 	
 	patch.resources.parameters = init_params()
 	
   	-- balls
-  	patch.nBalls = 200
   	patch.ballList = {}
+  	local nBalls = math.floor(patch.resources.parameters:get("nBalls"))
   	-- generate balls
-  	for i = 1, patch.nBalls do
+  	for i = 1, nBalls do
     	addBall(screen.InternalRes.W / 2, screen.InternalRes.H / 2)
   	end
 end
@@ -88,10 +95,11 @@ end
 local function drawBall(b)
   	local border_col = Palettes.getColor(PALETTE, math.random(16))
   	love.graphics.setColor(border_col[1] / 255, border_col[2] / 255, border_col[3] / 255, 1)
-  	love.graphics.circle("line", b.x, b.y, (b.z / 2) ^ 1.6, (b.z * 2) + 6)
+	local rp = patch.resources.parameters:get("radiusPow")
+  	love.graphics.circle("line", b.x, b.y, (b.z / 2) ^ rp, (b.z * 2) + 6)
   	-- filled circle
   	love.graphics.setColor(b.c[1], b.c[2], b.c[3], 1)
-	love.graphics.circle("fill", b.x, b.y, (b.z / 2) ^ 1.6, (b.z * 2) + 6)
+	love.graphics.circle("fill", b.x, b.y, (b.z / 2) ^ rp, (b.z * 2) + 6)
 	love.graphics.setColor(1,1,1,1)
 end
 

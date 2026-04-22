@@ -2,6 +2,7 @@ local Patch = lovjRequire("lib/patch")
 local palettes = lovjRequire("lib/utils/palettes")
 local videoutils = lovjRequire("lib/utils/video")
 local screen_settings = lovjRequire("cfg/cfg_screen")
+local cfg_shaders = lovjRequire("cfg/cfg_shaders")
 local Timer = lovjRequire("lib/timer")
 local cfg_timers = lovjRequire("cfg/cfg_timers")
 
@@ -29,6 +30,12 @@ local function init_params()
 
     g:setName(1, "video")           g:set("video", "demos/demo7/assets/demo.ogg")
 
+	p:define(1, "playbackSpeed", 1.0,  { min = -2,  max = 4,   type = "float" })
+	p:define(2, "loopEnd",       10,   { min = 1,   max = 30,  type = "float" })
+	p:define(3, "bgColorR",      0.2,  { min = 0,   max = 1,   type = "float" })
+	p:define(4, "bgColorG",      0.4,  { min = 0,   max = 1,   type = "float" })
+	p:define(5, "bgColorB",      0.1,  { min = 0,   max = 1,   type = "float" })
+
 	patch.resources.graphics = g
 end
 
@@ -41,14 +48,15 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 
-	patch.setCanvases()
+	patch:setCanvases()
 
 	init_params()
 
+    local g = patch.resources.graphics
     patch.video = {}
     patch.video.handle = love.graphics.newVideo(g:get("video"))
     patch.video.pos = 0
@@ -73,25 +81,14 @@ function patch.draw()
 
 	local t = cfg_timers.globalTimer.T
 
-	-- select shader and apply chroma keying
-	local col = {t * 0.2 % 1, t * 0.4 % 1, t * 0.1 % 1}
+	local p = patch.resources.parameters
+	local col = {p:get("bgColorR"), p:get("bgColorG"), p:get("bgColorB")}
 	love.graphics.clear(col)
 
-	if cfg_shaders.enabled then
-		chroma = love.graphics.newShader(getShaderByName("chromakey"))
-		chroma:send("_chromaColor", g:get("_chromaColor"))
-		chroma:send("_chromaTolerance", g:get("_chromaTolerance"))
-	end
-	-- set canvas
 	love.graphics.setCanvas(patch.canvases.video)
-
-	-- render graphics
 	love.graphics.draw(patch.video.handle, 0, 0, 0, patch.video.scaleX, patch.video.scaleY)
-	-- apply chroma keying
-	if cfg_shaders.enabled then cfg_shaders.applyShader(chroma) end
-	-- set main canvas
+
 	love.graphics.setCanvas(patch.canvases.main)
-	-- draw video w/ chroma keying
 	if screen.isUpscalingHiRes() then
 		love.graphics.draw(patch.canvases.video, 0, 0, 0, screen.Scaling.X, screen.Scaling.Y)
 	else
@@ -104,10 +101,10 @@ end
 
 function patch.update()
     patch:mainUpdate()
-
-    -- handle loop
+    local p = patch.resources.parameters
+    patch.video.playbackSpeed = p:get("playbackSpeed")
+    patch.video.loopEnd = p:get("loopEnd")
     videoutils.handleLoop(patch.video)
-
 end
 
 

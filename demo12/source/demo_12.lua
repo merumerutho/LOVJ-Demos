@@ -33,7 +33,7 @@ end
 
 
 local function addBall(sx, sy)
-	ball = {}
+	local ball = {}
   -- ball starting position
 	ball.x = sx
 	ball.y = sy
@@ -111,14 +111,14 @@ local function init_params()
 	g:setName(2, "love")		g:set("love", "demos/demo12/assets/love.png")
 	get_bg()
 
-	p:setName(1, "windowSize") 			p:set("windowSize", 0.6)
-	p:setName(2, "showLain")			p:set("showLain", true)
-	p:setName(3, "showLove")			p:set("showLove", true)
-	p:setName(4, "drawOutsideEllipse")	p:set("drawOutsideEllipse", true)
-	p:setName(5, "flash")				p:set("flash", true)
-
-	p:setName(6, "sceneCenterX")		p:set("sceneCenterX", screen.InternalRes.W/2)
-	p:setName(7, "sceneCenterY")		p:set("sceneCenterY", screen.InternalRes.H/2)
+	p:define(1, "windowSize",        0.6,  { min = 0, max = 1,   type = "float" })
+	p:define(2, "showLain",          1,    { min = 0, max = 1,   step = 1, type = "int" })
+	p:define(3, "showLove",          1,    { min = 0, max = 1,   step = 1, type = "int" })
+	p:define(4, "drawOutsideEllipse",1,    { min = 0, max = 1,   step = 1, type = "int" })
+	p:define(5, "flash",             1,    { min = 0, max = 1,   step = 1, type = "int" })
+	p:define(6, "sceneCenterX",      screen.InternalRes.W/2, { min = 0, max = screen.InternalRes.W, type = "float" })
+	p:define(7, "sceneCenterY",      screen.InternalRes.H/2, { min = 0, max = screen.InternalRes.H, type = "float" })
+	p:define(8, "nBalls",            500,  { min = 50, max = 1000, step = 1, type = "int" })
 end
 
 --- @public setCanvases (re)set canvases for this patch
@@ -137,10 +137,11 @@ function patch:setCanvases()
 end
 
 
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	patch.hang = false
 	patch:setCanvases()
+	patch.shader_window = love.graphics.newShader(table.getValueByName("circlewindow", cfg_shaders.OtherShaders))
 	
   	-- balls
   	patch.nBalls = 500
@@ -153,7 +154,7 @@ function patch.init(slot)
   	end
 
 	-- Lfo
-	patch.lfo = Lfo:new(0.1, 0) -- frequency = 1, phase = 0
+	patch.lfo = Lfo:new(clock.syncRate("4bar"), 0)
 	init_params()
 end
 
@@ -234,8 +235,7 @@ function patch.draw()
 	end
 
 	if cfg_shaders.enabled and math.floor(t*10) % 3 ~=0 or (not p:get("drawOutsideEllipse")) then
-		patch.shader_window = love.graphics.newShader(table.getValueByName("circlewindow", cfg_shaders.OtherShaders)) -- set/update circle window shader
-		love.graphics.setShader(patch.shader_window) -- apply shader
+		love.graphics.setShader(patch.shader_window)
 		patch.shader_window:send("_windowSize", p:get("windowSize"))
 		patch.shader_window:send("_scx", scx / screen.InternalRes.W)
 		patch.shader_window:send("_scy", scy / screen.InternalRes.H)
@@ -307,6 +307,7 @@ function patch.update()
 	-- re-order balls
 	orderZ(patch.ballList)
 
+	patch.lfo:UpdateFreq(clock.syncRate("4bar"))
 	patch.lfo:UpdateTrigger(true)
 
 	if kp.isDown("x") then
@@ -316,17 +317,14 @@ function patch.update()
 		if kp.isDown("up") then p:set("sceneCenterY", p:get("sceneCenterY")+1) end
 		if kp.isDown("down") then p:set("sceneCenterY", p:get("sceneCenterY")-1) end
 	else
-		if kp.isDown("up") then p:set("windowSize", p:get("windowSize")+.01) end
-		if kp.isDown("down") then p:set("windowSize", p:get("windowSize")-.01) end
+		if kp.isDown("up") then p:set("windowSize", math.min(p:get("windowSize") + .01, 1)) end
+		if kp.isDown("down") then p:set("windowSize", math.max(p:get("windowSize") - .01, 0)) end
 	end
 
 	if kp.keypressOnRelease("q") then p:set("showLain", not p:get("showLain")) end
 	if kp.keypressOnRelease("w") then p:set("showLove", not p:get("showLove")) end
 	if kp.keypressOnRelease("e") then p:set("drawOutsideEllipse", not p:get("drawOutsideEllipse")) end
 	if kp.keypressOnRelease("t") then p:set("flash", not p:get("flash")) end
-
-	-- clamp colorInversion between 0 and 1
-	p:set("windowSize", math.min(math.max(p:get("windowSize"), 0), 1) )
 
 end
 

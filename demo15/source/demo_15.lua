@@ -15,12 +15,12 @@ local function init_params()
 	local g = patch.resources.graphics
 	local p = patch.resources.parameters
 
-	p:setName(1, "numBranches")			p:set("numBranches", 10)
-	p:setName(2, "ampModulator")		p:set("ampModulator", 10)
-	p:setName(3, "timeFactor")			p:set("timeFactor", 0)
-	p:setName(4, "triangleCenterAmp")	p:set("triangleCenterAmp", 10)
-	p:setName(5, "beta")				p:set("beta", 0.5)
-	p:setName(6, "rBase")				p:set("rBase", 50)
+	p:define(1, "numBranches",       10,  { min = 1,  max = 50,  step = 1, type = "int" })
+	p:define(2, "ampModulator",      10,  { min = 0,  max = 50,  type = "float" })
+	p:define(3, "timeFactor",        0,   { min = 0,  max = 2,   type = "float" })
+	p:define(4, "triangleCenterAmp", 10,  { min = 0,  max = 100, type = "float" })
+	p:define(5, "beta",              0.5, { min = 0,  max = 2,   type = "float" })
+	p:define(6, "rBase",             50,  { min = 1,  max = 200, step = 1, type = "int" })
 
 	patch.resources.parameters = p
 end
@@ -46,14 +46,14 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 	patch:setCanvases()
 
 	init_params()
 
-	patch.push = Lfo:new(0.1, 0)
+	patch.push = Lfo:new(clock.syncRate("4bar"), 0)
 end
 
 local function draw_eyeball(t, cx, cy)
@@ -115,7 +115,7 @@ local function draw_static(t, cx, cy)
 
 	for x = -150, 150, 10 do
 		for i = 1, #points do
-			ix = math.exp(-(x)^2/s_sigma)
+			local ix = math.exp(-(x)^2/s_sigma)
 			local y = 0
 			y = y + math.max(math.min(math.tan( x*x*100*x*math.sin(t/100+i/#points+x)), amp), -amp)
 			y = y + amp * math.sin((2*math.pi)*(t + i/20 + x/screen.InternalRes.W))
@@ -126,7 +126,7 @@ local function draw_static(t, cx, cy)
 	end
 
 	for i = 0, nStatics-1 do
-		alpha = math.abs(nStatics/2 - i) / nStatics
+		local alpha = math.abs(nStatics/2 - i) / nStatics
 		love.graphics.setColor(1,1,1,(1-alpha) - .5)
 		love.graphics.line(points[i+1])
 	end
@@ -136,8 +136,8 @@ end
 local function draw_scene()
 	local t = cfg_timers.globalTimer.T
 
-	g = patch.resources.graphics
-	p = patch.resources.parameters
+	local g = patch.resources.graphics
+	local p = patch.resources.parameters
 
 	local cx = screen.InternalRes.W/2
 	local cy = screen.InternalRes.H/2
@@ -178,7 +178,7 @@ function patch.update()
 	if kp.isDown("down") and kp.isDown("a") then p:set("ampModulator", p:get("ampModulator")-0.01) end
 
 	if kp.isDown("up") and kp.isDown("t") then p:set("timeFactor", p:get("timeFactor")+0.01) end
-	if kp.isDown("down") and kp.isDown("t") then p:set("timeFactor", p:get("timeFactor")-0.01) end
+	if kp.isDown("down") and kp.isDown("t") then p:set("timeFactor", math.max(0, p:get("timeFactor")-0.01)) end
 
 	if kp.isDown("up") and kp.isDown("c") then p:set("triangleCenterAmp", p:get("triangleCenterAmp")+0.1) end
 	if kp.isDown("down") and kp.isDown("c") then p:set("triangleCenterAmp", p:get("triangleCenterAmp")-0.1) end
@@ -189,8 +189,7 @@ function patch.update()
 	if kp.isDown("up") and kp.isDown("r") then p:set("rBase", p:get("rBase")+1) end
 	if kp.isDown("down") and kp.isDown("r") then p:set("rBase", p:get("rBase")-1) end
 
-	p:set("timeFactor", math.max(0, p:get("timeFactor")))
-
+	patch.push:UpdateFreq(clock.syncRate("4bar"))
 	patch.push:UpdateTrigger(true)
 
 	patch:mainUpdate()

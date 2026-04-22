@@ -33,8 +33,8 @@ end
 
 
 --- @public init init routine
-function patch.init(slot)
-	Patch.init(patch, slot)
+function patch.init(slot, globals, shaderext)
+	Patch.init(patch, slot, globals, shaderext)
 	PALETTE = palettes.PICO8
 
 	patch:setCanvases()
@@ -42,7 +42,7 @@ function patch.init(slot)
 	patch.resources.parameters,
 	patch.resources.graphics = init_params()
 
-	patch.lfo = Lfo:new(1, 0)
+	patch.lfo = Lfo:new(clock.syncRate("1/2bar"), 0)
 	patch.env = Envelope:new(0.5, 0.5, 0.5, 1)
 end
 
@@ -68,7 +68,7 @@ local function draw_stuff()
 						t * 20, screen.InternalRes.H - 100 - 10*patch.lfo:RampDown(t))
 
 	love.graphics.line(t * 20, screen.InternalRes.H - 130,
-						t * 20, screen.InternalRes.H - 130 - 10*patch.lfo:SampleHold(t))
+						t * 20, screen.InternalRes.H - 130 - 10*patch.lfo:RandomSH(t))
 
 	-- ENVELOPE
 	love.graphics.line(t * 20, screen.InternalRes.H - 10,
@@ -95,6 +95,7 @@ function patch.update()
 
 	patch.hang = not kp.isDown("r")
 
+	patch.lfo:UpdateFreq(clock.syncRate("1/2bar"))
 	-- update triggers
 	patch.lfo:UpdateTrigger(t<5)
 	patch.env:UpdateTrigger(t>6 and t<8)
