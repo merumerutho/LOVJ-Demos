@@ -19,7 +19,7 @@ function patch:patchControls()
 	
 	-- Reset
 	if kp.isDown("r") then
-    	patch.init(patch.slot)
+    	patch:init(patch.slot)
 	end
 end
 

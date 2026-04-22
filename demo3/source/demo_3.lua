@@ -25,7 +25,7 @@ function patch:patchControls()
   	end
 	-- Reset
 	if kp.isDown("r") then
-    	patch.init(patch.slot)
+    	patch:init(patch.slot)
 	end
 	-- hang
 	if kp.isDown("x") then patch.hang = true else patch.hang = false end

@@ -24,7 +24,7 @@ function patch:patchControls()
 	local p = patch.resources.parameters
 
 	if kp.isDown("r") then
-		patch.init(patch.slot)
+		patch:init(patch.slot)
 		cfg_timers.reset()
 	end
 

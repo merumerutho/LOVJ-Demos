@@ -19,7 +19,7 @@ function patch:patchControls()
 	-- Hanger
 	if love.keyboard.isDown("x") then patch.hang = true else patch.hang = false end
 	-- Reset
-	if love.keyboard.isDown("r") then patch.init(patch.slot) end
+	if love.keyboard.isDown("r") then patch:init(patch.slot) end
 end
 
 --- @private get_bg get background graphics based on patch.resources

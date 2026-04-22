@@ -153,7 +153,7 @@ local shader_code = [[
 		vec3 Y = cross(X, Z);
 
 		// camera roll
-		float roll = sin(_beat * _camOrbitSpeed * PI * 0.5) * _camRoll;
+		float roll = _beat * _camOrbitSpeed * _camRoll * TAU;
 		uv *= rot(roll);
 
 		vec3 rd = normalize(uv.x * X + uv.y * Y + Z);
@@ -219,7 +219,7 @@ local function init_params()
 	p:define(5,  "camDriftZ",      0.25,  { min = -2.0, max = 2.0,  type = "float" })
 	p:define(6,  "camJumpRate",    0.25,  { min = 0,    max = 2.0,  type = "float" })
 	p:define(7,  "camJumpSpread",  1.0,   { min = 0,    max = 3.0,  type = "float" })
-	p:define(8,  "camRoll",        0.3,   { min = 0,    max = 1.5,  type = "float" })
+	p:define(8,  "camRoll",        0.0,   { min = 0,    max = 1.0,  type = "float" })
 	p:define(9,  "tunnelSize",    32.0,   { min = 8.0,  max = 64.0, type = "float" })
 	p:define(10, "tubeWave",      12.0,   { min = 2.0,  max = 24.0, type = "float" })
 	p:define(11, "boxScale",      20.0,   { min = 5.0,  max = 80.0, type = "float" })

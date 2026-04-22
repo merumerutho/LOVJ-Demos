@@ -33,7 +33,7 @@ end
 --- @public patchControls evaluate user keyboard controls
 function patch:patchControls()
 	local p = patch.resources.parameters
-	if love.keyboard.isDown("r") then patch.init(patch.slot) cfg_timers.globalTimer:reset() end
+	if love.keyboard.isDown("r") then patch:init(patch.slot) cfg_timers.globalTimer:reset() end
 end
 
 
